@@ -1,0 +1,21 @@
+packages:
+  "framer-motion": "For beautiful page transitions and micro-interactions"
+  "clsx": "For merging tailwind classes safely"
+  "tailwind-merge": "For merging tailwind classes safely"
+  "date-fns": "For formatting order dates in Russian"
+
+images:
+  - path: "artifacts/fruit-store/public/images/hero-banner.png"
+    description: "A stunning, bright, rustic wooden table overflowing with fresh, vibrant, dewy organic fruits like oranges, apples, berries, and grapes under warm morning sunlight, professional food photography style"
+    aspect_ratio: "16:9"
+  - path: "artifacts/fruit-store/public/images/promo-organic.png"
+    description: "A beautiful rustic woven basket full of fresh green leaves and bright red apples in a sunlit green orchard, natural warm tones"
+    aspect_ratio: "16:9"
+  - path: "artifacts/fruit-store/public/images/empty-cart.png"
+    description: "A minimalist 3d illustration of an empty shopping basket with a single green leaf falling into it, soft lighting, clean background"
+    aspect_ratio: "1:1"
+
+notes:
+  - Assumes custom fetch in @workspace/api-client-react supports standard options for headers
+  - JWT token is managed in localStorage and injected into API hook calls via the request options
+  - Admin endpoint for GET /api/orders might not be explicitly in openapi, using standard fetch fallback

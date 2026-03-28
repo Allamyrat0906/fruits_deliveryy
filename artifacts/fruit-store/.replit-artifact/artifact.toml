@@ -1,0 +1,31 @@
+kind = "web"
+previewPath = "/"
+title = "Фруктовый Магазин"
+version = "1.0.0"
+id = "artifacts/fruit-store"
+router = "path"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 24317
+
+[services.development]
+run = "pnpm --filter @workspace/fruit-store run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/fruit-store", "run", "build" ]
+publicDir = "artifacts/fruit-store/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "24317"
+BASE_PATH = "/"
