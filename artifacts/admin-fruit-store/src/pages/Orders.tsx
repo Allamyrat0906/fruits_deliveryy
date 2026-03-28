@@ -121,7 +121,7 @@ export default function Orders() {
                       </td>
                       <td className="px-4 py-3 text-right font-semibold whitespace-nowrap">{fmt(order.totalPrice)}</td>
                       <td className="px-4 py-3 text-right text-muted-foreground whitespace-nowrap">
-                        {order.paidAmount ? fmt(order.paidAmount) : <span className="text-muted-foreground/40">—</span>}
+                        {order.paidAmount != null ? fmt(order.paidAmount) : <span className="text-muted-foreground/40">—</span>}
                       </td>
                       <td className="px-4 py-3 text-right whitespace-nowrap">
                         {changeDue !== null ? (
@@ -238,7 +238,7 @@ export default function Orders() {
                         <span className="text-muted-foreground">Сумма заказа</span>
                         <span className="font-semibold">{fmt(order.totalPrice)}</span>
                       </div>
-                      {order.paidAmount && (
+                      {order.paidAmount != null && (
                         <div className="flex justify-between">
                           <span className="text-muted-foreground">Оплачено наличными</span>
                           <span>{fmt(order.paidAmount)}</span>

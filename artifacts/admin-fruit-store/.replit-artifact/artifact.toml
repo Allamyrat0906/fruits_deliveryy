@@ -1,6 +1,6 @@
 kind = "web"
 previewPath = "/admin/"
-title = "Панель администратора"
+title = "Админ-панель"
 version = "1.0.0"
 id = "artifacts/admin-fruit-store"
 router = "path"
