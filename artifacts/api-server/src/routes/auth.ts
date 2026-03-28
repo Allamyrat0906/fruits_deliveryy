@@ -116,6 +116,11 @@ router.post("/google/verify", async (req, res) => {
       return;
     }
 
+    if (!tokenInfo.email_verified) {
+      res.status(401).json({ message: "Email Google аккаунта не подтверждён" });
+      return;
+    }
+
     const email = tokenInfo.email;
     if (!email) {
       res.status(401).json({ message: "Не удалось получить email от Google" });

@@ -47,7 +47,7 @@ export default function Shop() {
     setPage(1);
   };
 
-  const hasActiveFilters = search || category !== "Все" || organic || onSale;
+  const hasActiveFilters = Boolean(search) || category !== "Все" || organic || onSale;
 
   const FiltersContent = () => (
     <div className="space-y-8">

@@ -191,7 +191,7 @@ export default function Home() {
               </div>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                {saleData!.fruits.map((fruit, idx) => (
+                {(saleData?.fruits ?? []).map((fruit, idx) => (
                   <motion.div
                     key={fruit.id}
                     initial={{ opacity: 0, y: 20 }}

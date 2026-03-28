@@ -21,6 +21,9 @@ export function ProductCard({ fruit }: { fruit: Fruit }) {
 
   const effectivePrice = fruit.discountPrice ?? fruit.price;
   const isOnSale = !!fruit.discountPrice;
+  const discountPct = isOnSale
+    ? Math.round((1 - effectivePrice / fruit.price) * 100)
+    : 0;
 
   const handleAdd = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -55,7 +58,7 @@ export function ProductCard({ fruit }: { fruit: Fruit }) {
           {isOnSale && (
             <Badge className="bg-red-500 hover:bg-red-600 text-white border-none px-3 py-1 flex items-center gap-1 shadow-md">
               <Tag className="w-3 h-3" />
-              Акция
+              -{discountPct}%
             </Badge>
           )}
           {fruit.stock <= 5 && fruit.stock > 0 && (

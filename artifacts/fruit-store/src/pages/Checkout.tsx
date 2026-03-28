@@ -59,8 +59,9 @@ export default function Checkout() {
       toast({ variant: "destructive", title: "Ошибка", description: "Введите адрес доставки" });
       return;
     }
-    if (!phone.trim() || phone.trim().length < 8) {
-      toast({ variant: "destructive", title: "Ошибка", description: "Введите номер телефона" });
+    const cleanPhone = phone.trim().replace(/\s/g, "");
+    if (!cleanPhone || cleanPhone.length < 9) {
+      toast({ variant: "destructive", title: "Ошибка", description: "Введите корректный номер телефона" });
       return;
     }
 
@@ -68,7 +69,7 @@ export default function Checkout() {
     try {
       const orderData = {
         address,
-        phone: phone.trim(),
+        phone: cleanPhone,
         ...(paidNum > 0 && { paidAmount: paidNum }),
         items: items.map(item => ({
           fruitId: item.fruitId,
