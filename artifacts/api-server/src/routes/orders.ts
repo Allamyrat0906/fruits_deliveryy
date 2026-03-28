@@ -104,6 +104,16 @@ router.post("/", requireAuth, async (req: AuthRequest, res) => {
 
     const { address, phone, paidAmount, items } = parsed.data;
 
+    const normalizedPhone = (phone ?? "").replace(/\s/g, "");
+    if (normalizedPhone.length < 9) {
+      res.status(400).json({ message: "Введите корректный номер телефона" });
+      return;
+    }
+    if (paidAmount !== undefined && paidAmount < 0) {
+      res.status(400).json({ message: "Сумма оплаты не может быть отрицательной" });
+      return;
+    }
+
     let totalPrice = 0;
     const enrichedItems: { fruitId: number; quantity: number; weight: string; unitPrice: number }[] = [];
 
@@ -124,7 +134,7 @@ router.post("/", requireAuth, async (req: AuthRequest, res) => {
     const [order] = await db.insert(ordersTable).values({
       userId: req.user!.id,
       address,
-      phone: phone ?? "",
+      phone: normalizedPhone,
       paidAmount: paidAmount ?? null,
       totalPrice,
       status: "ОЖИДАНИЕ",

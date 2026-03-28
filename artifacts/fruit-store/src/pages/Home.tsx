@@ -172,7 +172,7 @@ export default function Home() {
                   <span className="text-red-500 font-bold text-sm uppercase tracking-widest">Специальные предложения</span>
                 </div>
                 <h2 className="text-3xl md:text-4xl font-display font-bold text-foreground mb-4">
-                  Акции <span className="text-red-500">со скидкой</span>
+                  Акции <span className="text-red-500">и скидки</span>
                 </h2>
                 <p className="text-muted-foreground text-lg">Успейте купить по выгодным ценам</p>
               </div>
