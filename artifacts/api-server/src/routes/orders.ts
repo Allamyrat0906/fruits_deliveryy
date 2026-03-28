@@ -182,8 +182,9 @@ router.patch("/:id/status", requireAdmin, async (req: AuthRequest, res) => {
       return;
     }
 
+    const statusValue: "ОЖИДАНИЕ" | "ПОДТВЕРЖДЁН" | "ОТПРАВЛЕН" | "ДОСТАВЛЕН" | "ОТМЕНЁН" = parsed.data.status;
     const [order] = await db.update(ordersTable)
-      .set({ status: parsed.data.status as any })
+      .set({ status: statusValue })
       .where(eq(ordersTable.id, id))
       .returning();
 

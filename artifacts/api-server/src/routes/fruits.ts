@@ -7,7 +7,7 @@ import { GetFruitsQueryParams, CreateFruitBody } from "@workspace/api-zod";
 
 const router = Router();
 
-function withInStock(fruit: any) {
+function withInStock(fruit: typeof fruitsTable.$inferSelect) {
   return { ...fruit, inStock: (fruit.stock ?? 0) > 0 };
 }
 
@@ -75,7 +75,20 @@ router.post("/", requireAdmin, async (req: AuthRequest, res) => {
       return;
     }
 
-    const [fruit] = await db.insert(fruitsTable).values(parsed.data as any).returning();
+    const d = parsed.data;
+    const [fruit] = await db.insert(fruitsTable).values({
+      name: d.name,
+      slug: d.slug,
+      description: d.description ?? null,
+      price: d.price,
+      discountPrice: d.discountPrice ?? null,
+      stock: d.stock,
+      category: d.category,
+      organic: d.organic ?? false,
+      imageUrl: d.imageUrl ?? null,
+      images: d.images ?? [],
+    }).returning();
+
     res.status(201).json(withInStock(fruit));
   } catch (err) {
     req.log.error({ err }, "Create fruit error");
@@ -85,14 +98,27 @@ router.post("/", requireAdmin, async (req: AuthRequest, res) => {
 
 router.put("/:id", requireAdmin, async (req: AuthRequest, res) => {
   try {
-    const id = parseInt(req.params.id);
+    const id = parseInt(req.params.id, 10);
     const parsed = CreateFruitBody.safeParse(req.body);
     if (!parsed.success) {
       res.status(400).json({ message: "Ошибка валидации" });
       return;
     }
 
-    const [fruit] = await db.update(fruitsTable).set(parsed.data as any).where(eq(fruitsTable.id, id)).returning();
+    const d = parsed.data;
+    const [fruit] = await db.update(fruitsTable).set({
+      name: d.name,
+      slug: d.slug,
+      description: d.description ?? null,
+      price: d.price,
+      discountPrice: d.discountPrice ?? null,
+      stock: d.stock,
+      category: d.category,
+      organic: d.organic ?? false,
+      imageUrl: d.imageUrl ?? null,
+      images: d.images ?? [],
+    }).where(eq(fruitsTable.id, id)).returning();
+
     if (!fruit) {
       res.status(404).json({ message: "Продукт не найден" });
       return;
@@ -106,7 +132,7 @@ router.put("/:id", requireAdmin, async (req: AuthRequest, res) => {
 
 router.delete("/:id", requireAdmin, async (req: AuthRequest, res) => {
   try {
-    const id = parseInt(req.params.id);
+    const id = parseInt(req.params.id, 10);
     const [fruit] = await db.delete(fruitsTable).where(eq(fruitsTable.id, id)).returning();
     if (!fruit) {
       res.status(404).json({ message: "Продукт не найден" });
