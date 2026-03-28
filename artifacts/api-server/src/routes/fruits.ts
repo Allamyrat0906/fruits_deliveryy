@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { db } from "@workspace/db";
 import { fruitsTable } from "@workspace/db/schema";
-import { eq, ilike, gte, lte, and, isNotNull, SQL } from "drizzle-orm";
+import { eq, ilike, gte, lte, and, isNotNull, count, SQL } from "drizzle-orm";
 import { requireAdmin, AuthRequest } from "../middlewares/auth.js";
 import { GetFruitsQueryParams, CreateFruitBody } from "@workspace/api-zod";
 
@@ -34,9 +34,18 @@ router.get("/", async (req, res) => {
     const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
     const offset = (page - 1) * limit;
 
-    const allFruits = await db.select().from(fruitsTable).where(whereClause);
-    const total = allFruits.length;
-    const fruits = allFruits.slice(offset, offset + limit).map(withInStock);
+    const [{ value: total }] = await db
+      .select({ value: count() })
+      .from(fruitsTable)
+      .where(whereClause);
+
+    const fruits = await db
+      .select()
+      .from(fruitsTable)
+      .where(whereClause)
+      .limit(limit)
+      .offset(offset)
+      .then((rows) => rows.map(withInStock));
 
     res.json({
       fruits,
