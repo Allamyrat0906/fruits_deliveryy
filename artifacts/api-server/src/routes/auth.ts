@@ -1,6 +1,5 @@
 import { Router } from "express";
 import bcrypt from "bcryptjs";
-import { OAuth2Client } from "google-auth-library";
 import { db } from "@workspace/db";
 import { usersTable } from "@workspace/db/schema";
 import { eq } from "drizzle-orm";
@@ -94,28 +93,34 @@ router.post("/login", async (req, res) => {
 });
 
 router.post("/google/verify", async (req, res) => {
-  const clientId = process.env.GOOGLE_CLIENT_ID;
-  if (!clientId) {
+  if (!process.env.GOOGLE_CLIENT_ID) {
     res.status(501).json({ message: "Вход через Google не настроен на сервере" });
     return;
   }
 
-  const { credential } = req.body as { credential?: unknown };
-  if (typeof credential !== "string" || !credential) {
-    res.status(400).json({ message: "Отсутствует Google credential" });
+  const { accessToken } = req.body as { accessToken?: unknown };
+  if (typeof accessToken !== "string" || !accessToken) {
+    res.status(400).json({ message: "Отсутствует Google access token" });
     return;
   }
 
   try {
-    const client = new OAuth2Client(clientId);
-    const ticket = await client.verifyIdToken({ idToken: credential, audience: clientId });
-    const payload = ticket.getPayload();
-    if (!payload || !payload.email) {
+    const infoRes = await fetch(
+      `https://www.googleapis.com/oauth2/v3/userinfo`,
+      { headers: { Authorization: `Bearer ${accessToken}` } },
+    );
+    if (!infoRes.ok) {
       res.status(401).json({ message: "Недействительный Google токен" });
       return;
     }
 
-    const { email, name: googleName, picture } = payload;
+    const info = await infoRes.json() as { email?: string; name?: string; picture?: string };
+    if (!info.email) {
+      res.status(401).json({ message: "Не удалось получить email от Google" });
+      return;
+    }
+
+    const { email, name: googleName, picture } = info;
     const displayName = googleName || email.split("@")[0];
 
     const existing = await db.select().from(usersTable).where(eq(usersTable.email, email)).limit(1);
