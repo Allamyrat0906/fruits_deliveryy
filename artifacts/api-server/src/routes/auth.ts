@@ -1,5 +1,6 @@
 import { Router } from "express";
 import bcrypt from "bcryptjs";
+import { OAuth2Client } from "google-auth-library";
 import { db } from "@workspace/db";
 import { usersTable } from "@workspace/db/schema";
 import { eq } from "drizzle-orm";
@@ -93,7 +94,8 @@ router.post("/login", async (req, res) => {
 });
 
 router.post("/google/verify", async (req, res) => {
-  if (!process.env.GOOGLE_CLIENT_ID) {
+  const clientId = process.env.GOOGLE_CLIENT_ID;
+  if (!clientId) {
     res.status(501).json({ message: "Вход через Google не настроен на сервере" });
     return;
   }
@@ -105,23 +107,30 @@ router.post("/google/verify", async (req, res) => {
   }
 
   try {
-    const infoRes = await fetch(
-      `https://www.googleapis.com/oauth2/v3/userinfo`,
-      { headers: { Authorization: `Bearer ${accessToken}` } },
-    );
-    if (!infoRes.ok) {
-      res.status(401).json({ message: "Недействительный Google токен" });
+    const client = new OAuth2Client(clientId);
+    const tokenInfo = await client.getTokenInfo(accessToken);
+
+    const audience = Array.isArray(tokenInfo.aud) ? tokenInfo.aud : [tokenInfo.aud];
+    if (!audience.includes(clientId)) {
+      res.status(401).json({ message: "Недействительный Google токен: неверная аудитория" });
       return;
     }
 
-    const info = await infoRes.json() as { email?: string; name?: string; picture?: string };
-    if (!info.email) {
+    const email = tokenInfo.email;
+    if (!email) {
       res.status(401).json({ message: "Не удалось получить email от Google" });
       return;
     }
 
-    const { email, name: googleName, picture } = info;
-    const displayName = googleName || email.split("@")[0];
+    const userInfoRes = await fetch("https://www.googleapis.com/oauth2/v3/userinfo", {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    });
+    const userInfo = userInfoRes.ok
+      ? await userInfoRes.json() as { name?: string; picture?: string }
+      : {};
+
+    const displayName = userInfo.name || email.split("@")[0];
+    const picture = userInfo.picture;
 
     const existing = await db.select().from(usersTable).where(eq(usersTable.email, email)).limit(1);
 
