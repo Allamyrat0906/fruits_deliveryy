@@ -82,7 +82,7 @@ export default function Products() {
   const [editFruit, setEditFruit] = useState<Fruit | null>(null);
   const [form, setForm] = useState<FruitForm>(defaultForm);
 
-  const { data, isLoading, refetch } = useGetFruits({ page, limit: 20, ...(search ? { search } : {}) });
+  const { data, isLoading, refetch } = useGetFruits({ page, limit: 10, ...(search ? { search } : {}) });
   const createMutation = useCreateFruit();
   const updateMutation = useUpdateFruit();
   const deleteMutation = useDeleteFruit();

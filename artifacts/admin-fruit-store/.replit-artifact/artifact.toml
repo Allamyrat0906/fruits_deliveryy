@@ -1,5 +1,5 @@
 kind = "web"
-previewPath = "/admin-fruit-store/"
+previewPath = "/admin/"
 title = "Панель администратора"
 version = "1.0.0"
 id = "artifacts/admin-fruit-store"
@@ -11,7 +11,7 @@ version = "1.0.0"
 
 [[services]]
 name = "web"
-paths = [ "/admin-fruit-store/" ]
+paths = [ "/admin/" ]
 localPort = 21528
 
 [services.development]
@@ -28,4 +28,4 @@ to = "/index.html"
 
 [services.env]
 PORT = "21528"
-BASE_PATH = "/admin-fruit-store/"
+BASE_PATH = "/admin/"

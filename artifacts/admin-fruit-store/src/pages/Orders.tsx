@@ -3,12 +3,13 @@ import { useGetAllOrders, useUpdateOrderStatus } from "@workspace/api-client-rea
 import type { AdminOrder, OrderItem } from "@workspace/api-client-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { format } from "date-fns";
 import { ru } from "date-fns/locale";
-import { ChevronDown, Phone, MapPin, Mail, Eye, Wallet, ReceiptText } from "lucide-react";
+import { ChevronDown, Phone, MapPin, Mail, Eye, Wallet, ReceiptText, Search } from "lucide-react";
 
 const STATUSES = ["ОЖИДАНИЕ", "ПОДТВЕРЖДЁН", "ОТПРАВЛЕН", "ДОСТАВЛЕН", "ОТМЕНЁН"] as const;
 type Status = typeof STATUSES[number];
@@ -27,9 +28,10 @@ const fmt = (n: number) =>
 export default function Orders() {
   const { toast } = useToast();
   const [page, setPage] = useState(1);
+  const [search, setSearch] = useState("");
   const [selectedOrder, setSelectedOrder] = useState<AdminOrder | null>(null);
 
-  const { data, isLoading, refetch } = useGetAllOrders({ page, limit: 20 });
+  const { data, isLoading, refetch } = useGetAllOrders({ page, limit: 10, ...(search ? { search } : {}) });
   const updateStatus = useUpdateOrderStatus();
 
   const handleStatusChange = async (orderId: number, status: Status) => {
@@ -53,15 +55,29 @@ export default function Orders() {
         </div>
       </div>
 
+      {/* Search */}
+      <div className="relative mb-5">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+        <Input
+          placeholder="Поиск по имени, email или телефону..."
+          value={search}
+          onChange={(e) => { setSearch(e.target.value); setPage(1); }}
+          className="pl-9 max-w-sm"
+        />
+      </div>
+
       <div className="bg-card border border-border rounded-xl overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-border bg-muted/40">
                 <th className="text-left px-4 py-3 font-medium text-muted-foreground">№</th>
-                <th className="text-left px-4 py-3 font-medium text-muted-foreground">Клиент</th>
+                <th className="text-left px-4 py-3 font-medium text-muted-foreground">Покупатель</th>
+                <th className="text-left px-4 py-3 font-medium text-muted-foreground">Адрес</th>
                 <th className="text-left px-4 py-3 font-medium text-muted-foreground">Дата</th>
                 <th className="text-right px-4 py-3 font-medium text-muted-foreground">Сумма</th>
+                <th className="text-right px-4 py-3 font-medium text-muted-foreground">Наличные</th>
+                <th className="text-right px-4 py-3 font-medium text-muted-foreground">Сдача</th>
                 <th className="text-left px-4 py-3 font-medium text-muted-foreground">Статус</th>
                 <th className="px-4 py-3" />
               </tr>
@@ -70,7 +86,7 @@ export default function Orders() {
               {isLoading ? (
                 Array.from({ length: 5 }).map((_, i) => (
                   <tr key={i} className="border-b border-border/50">
-                    {Array.from({ length: 6 }).map((_, j) => (
+                    {Array.from({ length: 9 }).map((_, j) => (
                       <td key={j} className="px-4 py-3">
                         <div className="h-4 bg-muted rounded animate-pulse" />
                       </td>
@@ -79,24 +95,41 @@ export default function Orders() {
                 ))
               ) : data?.orders.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-4 py-12 text-center text-muted-foreground">
-                    Заказов пока нет
+                  <td colSpan={9} className="px-4 py-12 text-center text-muted-foreground">
+                    {search ? "Заказы не найдены" : "Заказов пока нет"}
                   </td>
                 </tr>
               ) : (
                 data?.orders.map((order) => {
                   const cfg = STATUS_CONFIG[order.status as Status] || STATUS_CONFIG["ОЖИДАНИЕ"];
+                  const changeDue = order.changeDue ?? null;
                   return (
                     <tr key={order.id} className="border-b border-border/50 hover:bg-muted/20 transition-colors">
-                      <td className="px-4 py-3 font-mono text-muted-foreground">#{order.id}</td>
+                      <td className="px-4 py-3 font-mono text-muted-foreground text-xs">#{order.id}</td>
                       <td className="px-4 py-3">
                         <p className="font-medium text-foreground">{order.customerName}</p>
                         <p className="text-xs text-muted-foreground">{order.customerEmail}</p>
+                        <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
+                          <Phone className="w-3 h-3" />{order.phone}
+                        </p>
                       </td>
-                      <td className="px-4 py-3 text-muted-foreground text-xs">
-                        {format(new Date(order.createdAt), "d MMM yyyy, HH:mm", { locale: ru })}
+                      <td className="px-4 py-3 max-w-[180px]">
+                        <p className="text-xs text-muted-foreground truncate" title={order.address}>{order.address}</p>
                       </td>
-                      <td className="px-4 py-3 text-right font-semibold">{fmt(order.totalPrice)}</td>
+                      <td className="px-4 py-3 text-muted-foreground text-xs whitespace-nowrap">
+                        {format(new Date(order.createdAt), "d MMM yyyy HH:mm", { locale: ru })}
+                      </td>
+                      <td className="px-4 py-3 text-right font-semibold whitespace-nowrap">{fmt(order.totalPrice)}</td>
+                      <td className="px-4 py-3 text-right text-muted-foreground whitespace-nowrap">
+                        {order.paidAmount ? fmt(order.paidAmount) : <span className="text-muted-foreground/40">—</span>}
+                      </td>
+                      <td className="px-4 py-3 text-right whitespace-nowrap">
+                        {changeDue !== null ? (
+                          <span className="text-primary font-semibold">{fmt(changeDue)}</span>
+                        ) : (
+                          <span className="text-muted-foreground/40">—</span>
+                        )}
+                      </td>
                       <td className="px-4 py-3">
                         <Select
                           value={order.status}
@@ -145,9 +178,7 @@ export default function Orders() {
           {selectedOrder && (() => {
             const order = selectedOrder;
             const cfg = STATUS_CONFIG[order.status as Status] || STATUS_CONFIG["ОЖИДАНИЕ"];
-            const changeDue = order.paidAmount && order.paidAmount > order.totalPrice
-              ? order.paidAmount - order.totalPrice
-              : null;
+            const changeDue = order.changeDue ?? null;
             return (
               <>
                 <DialogHeader>
@@ -209,13 +240,13 @@ export default function Orders() {
                       </div>
                       {order.paidAmount && (
                         <div className="flex justify-between">
-                          <span className="text-muted-foreground">Оплачено</span>
+                          <span className="text-muted-foreground">Оплачено наличными</span>
                           <span>{fmt(order.paidAmount)}</span>
                         </div>
                       )}
                       {changeDue !== null && (
                         <div className="flex justify-between pt-1.5 border-t border-border">
-                          <span className="font-medium text-primary">Сдача</span>
+                          <span className="font-medium text-primary">Сдача курьеру</span>
                           <span className="font-bold text-primary text-base">{fmt(changeDue)}</span>
                         </div>
                       )}
@@ -229,7 +260,7 @@ export default function Orders() {
                       value={order.status}
                       onValueChange={(v) => {
                         handleStatusChange(order.id, v as Status);
-                        setSelectedOrder({ ...order, status: v });
+                        setSelectedOrder({ ...order, status: v as Status });
                       }}
                     >
                       <SelectTrigger className="w-full">

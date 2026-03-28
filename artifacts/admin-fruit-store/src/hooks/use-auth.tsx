@@ -21,7 +21,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const queryClient = useQueryClient();
 
   const { data: user, isLoading } = useGetCurrentUser({
-    query: { enabled: !!token },
+    query: { queryKey: getGetCurrentUserQueryKey(), enabled: !!token },
   });
 
   useEffect(() => {
