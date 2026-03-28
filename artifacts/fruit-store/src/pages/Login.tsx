@@ -6,7 +6,58 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { Leaf, Shield, User } from "lucide-react";
+import { Leaf, Shield, User as UserIcon } from "lucide-react";
+import { GoogleOAuthProvider, GoogleLogin } from "@react-oauth/google";
+import type { User } from "@workspace/api-client-react";
+
+const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID as string | undefined;
+
+function GoogleSignInButton() {
+  const { login } = useAuth();
+  const [, setLocation] = useLocation();
+  const { toast } = useToast();
+
+  const handleSuccess = async (credentialResponse: { credential?: string }) => {
+    const { credential } = credentialResponse;
+    if (!credential) return;
+    try {
+      const res = await fetch("/api/auth/google/verify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ credential }),
+      });
+      if (!res.ok) {
+        const data = await res.json() as { message?: string };
+        throw new Error(data.message || "Google вход не удался");
+      }
+      const data = await res.json() as { token: string; user: User };
+      login(data.token, data.user);
+      const searchParams = new URLSearchParams(window.location.search);
+      setLocation(searchParams.get("redirect") || "/");
+      toast({ title: "Успешный вход через Google" });
+    } catch (err) {
+      toast({
+        variant: "destructive",
+        title: "Ошибка Google входа",
+        description: err instanceof Error ? err.message : "Попробуйте войти через email",
+      });
+    }
+  };
+
+  return (
+    <GoogleLogin
+      onSuccess={handleSuccess}
+      onError={() => {
+        toast({ variant: "destructive", title: "Ошибка Google входа", description: "Попробуйте другой способ" });
+      }}
+      useOneTap={false}
+      width="100%"
+      text="signin_with"
+      shape="rectangular"
+      locale="ru"
+    />
+  );
+}
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -72,7 +123,7 @@ export default function Login() {
               onClick={fillCustomer}
               className="flex items-center gap-2 bg-secondary/30 hover:bg-secondary/50 text-foreground border border-border rounded-xl px-3 py-2.5 text-xs font-medium transition-colors text-left"
             >
-              <User className="w-4 h-4 shrink-0" />
+              <UserIcon className="w-4 h-4 shrink-0" />
               <div>
                 <p className="font-bold">Покупатель</p>
                 <p className="text-[10px] text-muted-foreground">ivan@example.ru</p>
@@ -90,6 +141,19 @@ export default function Login() {
           </div>
           <h1 className="text-2xl font-bold text-center text-foreground mb-2">С возвращением</h1>
           <p className="text-center text-muted-foreground mb-8">Войдите в свой аккаунт для покупок</p>
+
+          {GOOGLE_CLIENT_ID && (
+            <div className="mb-6">
+              <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
+                <GoogleSignInButton />
+              </GoogleOAuthProvider>
+              <div className="flex items-center gap-3 my-6">
+                <div className="flex-1 h-px bg-border" />
+                <span className="text-xs text-muted-foreground">или</span>
+                <div className="flex-1 h-px bg-border" />
+              </div>
+            </div>
+          )}
 
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>

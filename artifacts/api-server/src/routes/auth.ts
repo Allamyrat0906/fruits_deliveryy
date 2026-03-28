@@ -1,5 +1,6 @@
 import { Router } from "express";
 import bcrypt from "bcryptjs";
+import { OAuth2Client } from "google-auth-library";
 import { db } from "@workspace/db";
 import { usersTable } from "@workspace/db/schema";
 import { eq } from "drizzle-orm";
@@ -89,6 +90,55 @@ router.post("/login", async (req, res) => {
   } catch (err) {
     req.log.error({ err }, "Login error");
     res.status(500).json({ message: "Внутренняя ошибка сервера" });
+  }
+});
+
+router.post("/google/verify", async (req, res) => {
+  const clientId = process.env.GOOGLE_CLIENT_ID;
+  if (!clientId) {
+    res.status(501).json({ message: "Вход через Google не настроен на сервере" });
+    return;
+  }
+
+  const { credential } = req.body as { credential?: unknown };
+  if (typeof credential !== "string" || !credential) {
+    res.status(400).json({ message: "Отсутствует Google credential" });
+    return;
+  }
+
+  try {
+    const client = new OAuth2Client(clientId);
+    const ticket = await client.verifyIdToken({ idToken: credential, audience: clientId });
+    const payload = ticket.getPayload();
+    if (!payload || !payload.email) {
+      res.status(401).json({ message: "Недействительный Google токен" });
+      return;
+    }
+
+    const { email, name: googleName, picture } = payload;
+    const displayName = googleName || email.split("@")[0];
+
+    const existing = await db.select().from(usersTable).where(eq(usersTable.email, email)).limit(1);
+
+    let user = existing[0];
+    if (!user) {
+      const [created] = await db.insert(usersTable).values({
+        name: displayName,
+        email,
+        avatar: picture ?? null,
+        role: "CUSTOMER",
+      }).returning();
+      user = created;
+    }
+
+    const token = generateToken({ id: user.id, email: user.email, role: user.role });
+    res.json({
+      token,
+      user: { id: user.id, name: user.name, email: user.email, role: user.role, avatar: user.avatar, createdAt: user.createdAt },
+    });
+  } catch (err) {
+    req.log.error({ err }, "Google verify error");
+    res.status(401).json({ message: "Не удалось верифицировать Google токен" });
   }
 });
 

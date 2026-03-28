@@ -25,11 +25,11 @@ export function Footer() {
             <ul className="space-y-4 text-muted-foreground">
               <li className="flex items-start gap-3">
                 <MapPin className="w-5 h-5 text-primary shrink-0" />
-                <span>г. Москва, ул. Свежая, д. 15<br/>Россия, 101000</span>
+                <span>г. Минск, пр-т Независимости, 15<br/>Беларусь, 220013</span>
               </li>
               <li className="flex items-center gap-3">
                 <Phone className="w-5 h-5 text-primary shrink-0" />
-                <span>+7 (999) 123-45-67</span>
+                <a href="tel:+375447014974" className="hover:text-primary transition-colors">+375 44 701 4974</a>
               </li>
               <li className="flex items-center gap-3">
                 <Mail className="w-5 h-5 text-primary shrink-0" />
