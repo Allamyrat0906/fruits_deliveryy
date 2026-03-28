@@ -8,7 +8,7 @@ import { motion } from "framer-motion";
 
 export default function Home() {
   const { data, isLoading } = useGetFruits({ limit: 4 });
-  const { data: saleData, isLoading: saleLoading } = useGetFruits({ onSale: true, limit: 4 } as any);
+  const { data: saleData, isLoading: saleLoading } = useGetFruits({ onSale: true, limit: 4 });
 
   return (
     <div className="min-h-screen pt-20">

@@ -7,7 +7,7 @@ import { CreateOrderBody, UpdateOrderStatusBody } from "@workspace/api-zod";
 
 const router = Router();
 
-async function buildOrderResponse(order: any) {
+async function buildOrderResponse(order: typeof ordersTable.$inferSelect) {
   const items = await db.select({
     id: orderItemsTable.id,
     fruitId: orderItemsTable.fruitId,

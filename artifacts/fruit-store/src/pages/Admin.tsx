@@ -3,6 +3,7 @@ import { useLocation } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
 import { authHeaders } from "@/lib/auth-helpers";
 import { useGetFruits, useCreateFruit, useUpdateFruit, useDeleteFruit, useUpdateOrderStatus, Fruit, Order } from "@workspace/api-client-react";
+import type { CreateFruitInputCategory, UpdateOrderStatusInputStatus } from "@workspace/api-client-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -48,8 +49,11 @@ export default function Admin() {
   const [isFruitModalOpen, setIsFruitModalOpen] = useState(false);
   const [editingFruit, setEditingFruit] = useState<Fruit | null>(null);
 
-  const [formData, setFormData] = useState({
-    name: "", slug: "", description: "", price: 0, stock: 0, category: "МЕСТНЫЕ" as any, organic: false, imageUrl: ""
+  const [formData, setFormData] = useState<{
+    name: string; slug: string; description: string; price: number;
+    stock: number; category: CreateFruitInputCategory; organic: boolean; imageUrl: string;
+  }>({
+    name: "", slug: "", description: "", price: 0, stock: 0, category: "МЕСТНЫЕ", organic: false, imageUrl: ""
   });
 
   const handleOpenModal = (fruit?: Fruit) => {
@@ -98,7 +102,7 @@ export default function Admin() {
     }
   };
 
-  const handleOrderStatus = async (id: number, status: any) => {
+  const handleOrderStatus = async (id: number, status: UpdateOrderStatusInputStatus) => {
     try {
       await updateOrderMut.mutateAsync({ id, data: { status } });
       refetchOrders();
@@ -163,7 +167,7 @@ export default function Admin() {
 
                       <div className="space-y-2">
                         <Label>Категория</Label>
-                        <Select value={formData.category} onValueChange={(val: any) => setFormData({...formData, category: val})}>
+                        <Select value={formData.category} onValueChange={(val) => setFormData({...formData, category: val as CreateFruitInputCategory})}>
                           <SelectTrigger><SelectValue /></SelectTrigger>
                           <SelectContent>
                             <SelectItem value="МЕСТНЫЕ">МЕСТНЫЕ</SelectItem>

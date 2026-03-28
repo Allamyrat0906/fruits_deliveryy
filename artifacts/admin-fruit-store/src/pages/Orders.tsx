@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useGetAllOrders, useUpdateOrderStatus } from "@workspace/api-client-react";
+import type { AdminOrder, OrderItem } from "@workspace/api-client-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
@@ -26,9 +27,9 @@ const fmt = (n: number) =>
 export default function Orders() {
   const { toast } = useToast();
   const [page, setPage] = useState(1);
-  const [selectedOrder, setSelectedOrder] = useState<any>(null);
+  const [selectedOrder, setSelectedOrder] = useState<AdminOrder | null>(null);
 
-  const { data, isLoading, refetch } = useGetAllOrders({ page, limit: 20 } as any);
+  const { data, isLoading, refetch } = useGetAllOrders({ page, limit: 20 });
   const updateStatus = useUpdateOrderStatus();
 
   const handleStatusChange = async (orderId: number, status: Status) => {
@@ -184,7 +185,7 @@ export default function Orders() {
                       Состав заказа
                     </h3>
                     <div className="space-y-1.5">
-                      {order.items.map((item: any) => (
+                      {order.items.map((item: OrderItem) => (
                         <div key={item.id} className="flex justify-between text-sm py-1.5 border-b border-border/50">
                           <span className="text-foreground">
                             {item.fruitName} · {item.weight} × {item.quantity}

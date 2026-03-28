@@ -5,7 +5,7 @@ import {
   useUpdateFruit,
   useDeleteFruit,
 } from "@workspace/api-client-react";
-import type { Fruit } from "@workspace/api-client-react";
+import type { Fruit, CreateFruitInput } from "@workspace/api-client-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -82,7 +82,7 @@ export default function Products() {
   const [editFruit, setEditFruit] = useState<Fruit | null>(null);
   const [form, setForm] = useState<FruitForm>(defaultForm);
 
-  const { data, isLoading, refetch } = useGetFruits({ page, limit: 20, ...(search && { search }) } as any);
+  const { data, isLoading, refetch } = useGetFruits({ page, limit: 20, ...(search ? { search } : {}) });
   const createMutation = useCreateFruit();
   const updateMutation = useUpdateFruit();
   const deleteMutation = useDeleteFruit();
@@ -110,16 +110,16 @@ export default function Products() {
     setDialogOpen(true);
   };
 
-  const buildPayload = () => ({
+  const buildPayload = (): CreateFruitInput => ({
     name: form.name.trim(),
     slug: form.slug.trim() || slugify(form.name),
-    description: form.description.trim() || null,
+    description: form.description.trim() || undefined,
     price: parseFloat(form.price),
     discountPrice: form.discountPrice ? parseFloat(form.discountPrice) : null,
     stock: parseInt(form.stock, 10),
     category: form.category,
     organic: form.organic,
-    imageUrl: form.imageUrl.trim() || null,
+    imageUrl: form.imageUrl.trim() || undefined,
     images: form.images.split("\n").map((s) => s.trim()).filter(Boolean),
   });
 
@@ -131,16 +131,17 @@ export default function Products() {
     try {
       const data = buildPayload();
       if (editFruit) {
-        await updateMutation.mutateAsync({ id: editFruit.id, data: data as any });
+        await updateMutation.mutateAsync({ id: editFruit.id, data });
         toast({ title: "Товар обновлён" });
       } else {
-        await createMutation.mutateAsync({ data: data as any });
+        await createMutation.mutateAsync({ data });
         toast({ title: "Товар добавлен" });
       }
       setDialogOpen(false);
       refetch();
-    } catch (err: any) {
-      toast({ variant: "destructive", title: "Ошибка", description: err?.message || "Не удалось сохранить товар" });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Не удалось сохранить товар";
+      toast({ variant: "destructive", title: "Ошибка", description: message });
     }
   };
 

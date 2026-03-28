@@ -30,11 +30,11 @@ export default function Login() {
       const res = await loginMutation.mutateAsync({ data: { email, password } });
       login(res.token, res.user);
       toast({ title: "Успешный вход", description: `С возвращением, ${res.user.name}!` });
-    } catch (err: any) {
+    } catch (err) {
       toast({
         variant: "destructive",
         title: "Ошибка входа",
-        description: err.message || "Неверный email или пароль",
+        description: err instanceof Error ? err.message : "Неверный email или пароль",
       });
     }
   };

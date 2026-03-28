@@ -19,7 +19,7 @@ export default function Login() {
   const loginMutation = useLoginUser();
 
   useEffect(() => {
-    if (user?.role === "admin") setLocation("/products");
+    if (user?.role === "ADMIN") setLocation("/products");
   }, [user, setLocation]);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -28,7 +28,7 @@ export default function Login() {
       const result = await loginMutation.mutateAsync({
         data: { email, password },
       });
-      if (result.user.role !== "admin") {
+      if (result.user.role !== "ADMIN") {
         toast({ variant: "destructive", title: "Доступ запрещён", description: "Только для администраторов" });
         return;
       }

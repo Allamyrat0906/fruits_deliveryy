@@ -22,7 +22,7 @@ function ProtectedRoute({ component: Component }: { component: React.ComponentTy
   }
 
   if (!user) return <Redirect to="/login" />;
-  if (user.role !== "admin") {
+  if (user.role !== "ADMIN") {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-center">
@@ -49,7 +49,7 @@ function Router() {
       <Route path="/products" component={() => <ProtectedRoute component={Products} />} />
       <Route path="/orders" component={() => <ProtectedRoute component={Orders} />} />
       <Route path="/">
-        {user?.role === "admin" ? <Redirect to="/products" /> : <Redirect to="/login" />}
+        {user?.role === "ADMIN" ? <Redirect to="/products" /> : <Redirect to="/login" />}
       </Route>
     </Switch>
   );

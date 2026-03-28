@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { useGetFruits } from "@workspace/api-client-react";
+import type { GetFruitsCategory } from "@workspace/api-client-react";
 import { ProductCard } from "@/components/ProductCard";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -26,16 +27,17 @@ export default function Shop() {
     return () => clearTimeout(timer);
   }, [search]);
 
-  const queryParams = {
+  const categoryFilter: GetFruitsCategory | undefined =
+    category !== "Все" ? (category as GetFruitsCategory) : undefined;
+
+  const { data, isLoading } = useGetFruits({
     page,
     limit: 12,
     ...(debouncedSearch && { search: debouncedSearch }),
-    ...(category !== "Все" && { category: category as any }),
+    ...(categoryFilter && { category: categoryFilter }),
     ...(organic && { organic: true }),
     ...(onSale && { onSale: true }),
-  };
-
-  const { data, isLoading } = useGetFruits(queryParams as any);
+  });
 
   const resetFilters = () => {
     setSearch("");

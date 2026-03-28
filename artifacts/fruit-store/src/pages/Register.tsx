@@ -30,11 +30,11 @@ export default function Register() {
       const res = await registerMutation.mutateAsync({ data: { name, email, password } });
       login(res.token, res.user);
       toast({ title: "Регистрация успешна", description: "Добро пожаловать в Фруктовый Магазин!" });
-    } catch (err: any) {
+    } catch (err) {
       toast({ 
         variant: "destructive", 
         title: "Ошибка", 
-        description: err.message || "Ошибка при регистрации" 
+        description: err instanceof Error ? err.message : "Ошибка при регистрации" 
       });
     }
   };
