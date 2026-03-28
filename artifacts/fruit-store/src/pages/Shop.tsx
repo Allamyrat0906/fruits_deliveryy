@@ -6,8 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
-import { Slider } from "@/components/ui/slider";
-import { Search, SlidersHorizontal, X } from "lucide-react";
+import { Search, SlidersHorizontal, Tag, X } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 
 const CATEGORIES = ["Все", "МЕСТНЫЕ", "ТРОПИЧЕСКИЕ", "ОРГАНИЧЕСКИЕ", "ИМПОРТНЫЕ"];
@@ -18,10 +17,9 @@ export default function Shop() {
   const [search, setSearch] = useState(searchParams.get("search") || "");
   const [category, setCategory] = useState<string>(searchParams.get("category") || "Все");
   const [organic, setOrganic] = useState<boolean>(searchParams.get("organic") === "true");
-  const [priceRange, setPriceRange] = useState<number[]>([0, 5000]);
+  const [onSale, setOnSale] = useState<boolean>(searchParams.get("onSale") === "true");
   const [page, setPage] = useState(1);
 
-  // Debounced search for API
   const [debouncedSearch, setDebouncedSearch] = useState(search);
   useEffect(() => {
     const timer = setTimeout(() => setDebouncedSearch(search), 500);
@@ -34,19 +32,20 @@ export default function Shop() {
     ...(debouncedSearch && { search: debouncedSearch }),
     ...(category !== "Все" && { category: category as any }),
     ...(organic && { organic: true }),
-    ...(priceRange[1] < 5000 && { maxPrice: priceRange[1] }),
-    ...(priceRange[0] > 0 && { minPrice: priceRange[0] }),
+    ...(onSale && { onSale: true }),
   };
 
-  const { data, isLoading } = useGetFruits(queryParams);
+  const { data, isLoading } = useGetFruits(queryParams as any);
 
   const resetFilters = () => {
     setSearch("");
     setCategory("Все");
     setOrganic(false);
-    setPriceRange([0, 5000]);
+    setOnSale(false);
     setPage(1);
   };
+
+  const hasActiveFilters = search || category !== "Все" || organic || onSale;
 
   const FiltersContent = () => (
     <div className="space-y-8">
@@ -83,37 +82,38 @@ export default function Shop() {
 
       <div>
         <h3 className="font-semibold mb-4 text-foreground">Особенности</h3>
-        <div className="flex items-center space-x-2">
-          <Checkbox 
-            id="organic" 
-            checked={organic}
-            onCheckedChange={(checked) => { setOrganic(!!checked); setPage(1); }}
-            className="data-[state=checked]:bg-primary data-[state=checked]:border-primary"
-          />
-          <Label htmlFor="organic" className="font-medium cursor-pointer">
-            Только органические
-          </Label>
+        <div className="space-y-3">
+          <div className="flex items-center space-x-2">
+            <Checkbox 
+              id="organic" 
+              checked={organic}
+              onCheckedChange={(checked) => { setOrganic(!!checked); setPage(1); }}
+              className="data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+            />
+            <Label htmlFor="organic" className="font-medium cursor-pointer">
+              Только органические
+            </Label>
+          </div>
+          <div className="flex items-center space-x-2">
+            <Checkbox 
+              id="onSale" 
+              checked={onSale}
+              onCheckedChange={(checked) => { setOnSale(!!checked); setPage(1); }}
+              className="data-[state=checked]:bg-red-500 data-[state=checked]:border-red-500"
+            />
+            <Label htmlFor="onSale" className="font-medium cursor-pointer flex items-center gap-1.5">
+              <Tag className="w-3.5 h-3.5 text-red-500" />
+              <span>Только акционные</span>
+            </Label>
+          </div>
         </div>
       </div>
 
-      <div>
-        <h3 className="font-semibold mb-4 text-foreground flex justify-between">
-          <span>Цена (₽/кг)</span>
-          <span className="text-sm font-normal text-muted-foreground">до {priceRange[1]} ₽</span>
-        </h3>
-        <Slider
-          defaultValue={[0, 5000]}
-          max={5000}
-          step={100}
-          value={priceRange}
-          onValueChange={(val) => { setPriceRange(val); setPage(1); }}
-          className="py-4"
-        />
-      </div>
-
-      <Button variant="outline" className="w-full rounded-xl" onClick={resetFilters}>
-        <X className="w-4 h-4 mr-2" /> Сбросить фильтры
-      </Button>
+      {hasActiveFilters && (
+        <Button variant="outline" className="w-full rounded-xl" onClick={resetFilters}>
+          <X className="w-4 h-4 mr-2" /> Сбросить фильтры
+        </Button>
+      )}
     </div>
   );
 
@@ -126,7 +126,9 @@ export default function Shop() {
             <h1 className="text-3xl md:text-4xl font-display font-bold text-foreground">
               Каталог продуктов
             </h1>
-            <p className="text-muted-foreground mt-2">Свежие фрукты со всего мира</p>
+            <p className="text-muted-foreground mt-2">
+              {onSale ? "Акционные товары" : "Свежие фрукты из Беларуси и со всего мира"}
+            </p>
           </div>
           
           <Sheet>
@@ -143,6 +145,13 @@ export default function Shop() {
             </SheetContent>
           </Sheet>
         </div>
+
+        {onSale && (
+          <div className="mb-6 flex items-center gap-2 p-3 bg-red-50 dark:bg-red-950/20 border border-red-200/40 rounded-xl text-red-600 text-sm font-medium">
+            <Tag className="w-4 h-4" />
+            Показаны товары со скидкой
+          </div>
+        )}
 
         <div className="flex flex-col lg:flex-row gap-10">
           {/* Desktop Filters */}

@@ -22,7 +22,8 @@ pnpm workspace monorepo using TypeScript. Each package manages its own dependenc
 artifacts-monorepo/
 ├── artifacts/              # Deployable applications
 │   ├── api-server/         # Express API server
-│   └── fruit-store/        # React + Vite fruit store frontend
+│   ├── fruit-store/        # React + Vite fruit store frontend (at /)
+│   └── admin-fruit-store/  # React + Vite admin panel (at /admin-fruit-store/)
 ├── lib/                    # Shared libraries
 │   ├── api-spec/           # OpenAPI spec + Orval codegen config
 │   ├── api-client-react/   # Generated React Query hooks
@@ -38,50 +39,62 @@ artifacts-monorepo/
 
 ## Fruit Store App (Фруктовый Магазин)
 
-Full-stack Russian-language fruit e-commerce site for Russian customers.
+Full-stack Russian-language fruit e-commerce site for Belarusian customers (region: Belarus, +375 phone format).
 
 ### Features
 - Full Russian UI — all text in Russian
-- Product catalog with filtering (category, price, organic, search)
+- Product catalog with filtering (category, organic, onSale, search) — price filter removed
 - Shopping cart with localStorage persistence
-- JWT authentication (register/login)
+- JWT authentication (register/login), token stored as `fruit_token` in localStorage
+- Checkout with: phone field, cash payment + change calculation, min order 500₽, Belarus address placeholder
 - Order creation and order history
-- Admin panel for product and order management
+- Sale section on homepage showing discounted fruits
+- "Акция" badge + strikethrough price on ProductCard for discounted fruits
+- Out-of-stock indicators on product cards
 - Responsive design (mobile/tablet/desktop)
 
 ### Test Accounts
 - **Admin**: `admin@fruitstore.ru` / `admin123`
 - **Customer**: `ivan@example.ru` / `customer123`
 
-### Pages
-- `/` — Home (hero, featured fruits, categories)
-- `/shop` — Catalog with filters
+### Pages (fruit-store at `/`)
+- `/` — Home (hero, featured fruits, sale section, promo banner)
+- `/shop` — Catalog with filters (category, organic, onSale)
 - `/product/:slug` — Product detail
 - `/cart` — Shopping cart
-- `/checkout` — Checkout (requires login)
+- `/checkout` — Checkout with phone + change calculation (requires login, min 500₽)
 - `/my-orders` — Order history (requires login)
 - `/login` — Login
 - `/register` — Register
-- `/admin` — Admin panel (admin only)
+
+### Admin Panel (at `/admin-fruit-store/`)
+Separate React app at `/admin-fruit-store/` with dark sidebar navigation.
+- `/admin-fruit-store/login` — Admin login
+- `/admin-fruit-store/products` — Product CRUD (create/edit/delete) with discount price + images support
+- `/admin-fruit-store/orders` — All orders with phone, address, change-due display and status management
 
 ### API Endpoints
 - `POST /api/auth/register` — Register
 - `POST /api/auth/login` — Login (returns JWT)
 - `GET /api/auth/me` — Current user
-- `GET /api/fruits` — Fruit list (filter: category, price, organic, search)
+- `GET /api/fruits` — Fruit list (filter: category, organic, onSale, search, minPrice, maxPrice, page, limit)
 - `GET /api/fruits/:slug` — Fruit detail
 - `POST /api/fruits` — Create fruit (Admin)
 - `PUT /api/fruits/:id` — Update fruit (Admin)
 - `DELETE /api/fruits/:id` — Delete fruit (Admin)
-- `POST /api/orders` — Create order (Auth required)
+- `POST /api/orders` — Create order with phone + paidAmount (Auth required)
 - `GET /api/orders/my` — My orders (Auth required)
+- `GET /api/orders` — All orders with customer info, phone, address, changeDue (Admin)
 - `PATCH /api/orders/:id/status` — Update status (Admin)
 
 ### DB Schema
 - `users` — with roles (CUSTOMER/ADMIN)
-- `fruits` — with categories (МЕСТНЫЕ/ТРОПИЧЕСКИЕ/ОРГАНИЧЕСКИЕ/ИМПОРТНЫЕ)
-- `orders` — with statuses (ОЖИДАНИЕ/ПОДТВЕРЖДЁН/ОТПРАВЛЕН/ДОСТАВЛЕН/ОТМЕНЁН)
-- `order_items` — order line items
+- `fruits` — with categories (МЕСТНЫЕ/ТРОПИЧЕСКИЕ/ОРГАНИЧЕСКИЕ/ИМПОРТНЫЕ), discountPrice, images[]
+- `orders` — with statuses (ОЖИДАНИЕ/ПОДТВЕРЖДЁН/ОТПРАВЛЕН/ДОСТАВЛЕН/ОТМЕНЁН), phone, paidAmount
+- `order_items` — order line items with unitPrice
+
+### Seeded Data (16 fruits)
+5 fruits have discountPrice: Яблоко (69₽), Клубника (199₽), Манго (329₽), Апельсин (89₽), Малина (299₽)
 
 ## TypeScript & Composite Projects
 
@@ -106,6 +119,14 @@ Depends on: `@workspace/db`, `@workspace/api-zod`, `jsonwebtoken`, `bcryptjs`
 React + Vite frontend for the fruit store. Russian-language UI.
 Uses React Query hooks from `@workspace/api-client-react`.
 Key hooks: `use-auth.tsx` (JWT auth context), `use-cart.tsx` (cart context).
+Auth helper: `lib/auth-helpers.ts` exports `authHeaders()` for request headers.
+
+### `artifacts/admin-fruit-store` (`@workspace/admin-fruit-store`)
+
+React + Vite admin panel at `/admin-fruit-store/`. Dark sidebar layout.
+Pages: `Login.tsx`, `Products.tsx` (CRUD), `Orders.tsx` (order management).
+Uses same `fruit_token` JWT from localStorage as the fruit-store.
+Requires `role === "admin"` to access.
 
 ### `lib/db` (`@workspace/db`)
 

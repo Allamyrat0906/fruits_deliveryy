@@ -1,13 +1,14 @@
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowRight, Truck, ShieldCheck, Leaf } from "lucide-react";
+import { ArrowRight, Truck, ShieldCheck, Leaf, Tag } from "lucide-react";
 import { useGetFruits } from "@workspace/api-client-react";
 import { ProductCard } from "@/components/ProductCard";
 import { motion } from "framer-motion";
 
 export default function Home() {
   const { data, isLoading } = useGetFruits({ limit: 4 });
+  const { data: saleData, isLoading: saleLoading } = useGetFruits({ onSale: true, limit: 4 } as any);
 
   return (
     <div className="min-h-screen pt-20">
@@ -60,7 +61,7 @@ export default function Home() {
                 />
               </div>
               
-              {/* Floating badges */}
+              {/* Floating badge */}
               <motion.div 
                 animate={{ y: [0, -10, 0] }}
                 transition={{ repeat: Infinity, duration: 4, ease: "easeInOut" }}
@@ -71,7 +72,7 @@ export default function Home() {
                 </div>
                 <div>
                   <p className="font-bold text-sm">Быстрая доставка</p>
-                  <p className="text-xs text-muted-foreground">По всей Москве</p>
+                  <p className="text-xs text-muted-foreground">По всей Беларуси</p>
                 </div>
               </motion.div>
             </motion.div>
@@ -159,6 +160,60 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      {/* Sale Section */}
+      {(saleLoading || (saleData?.fruits && saleData.fruits.length > 0)) && (
+        <section className="py-20 bg-red-50/50 dark:bg-red-950/10 border-y border-red-200/30">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex justify-between items-end mb-12">
+              <div>
+                <div className="flex items-center gap-3 mb-3">
+                  <Tag className="w-6 h-6 text-red-500" />
+                  <span className="text-red-500 font-bold text-sm uppercase tracking-widest">Специальные предложения</span>
+                </div>
+                <h2 className="text-3xl md:text-4xl font-display font-bold text-foreground mb-4">
+                  Акции <span className="text-red-500">со скидкой</span>
+                </h2>
+                <p className="text-muted-foreground text-lg">Успейте купить по выгодным ценам</p>
+              </div>
+              <Link href="/shop?onSale=true">
+                <Button variant="outline" className="hidden md:flex rounded-xl border-red-200 text-red-600 hover:bg-red-50">
+                  Все акции <ArrowRight className="ml-2 w-4 h-4" />
+                </Button>
+              </Link>
+            </div>
+
+            {saleLoading ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                {[1, 2, 3, 4].map(i => (
+                  <div key={i} className="bg-card rounded-2xl aspect-[3/4] animate-pulse border border-border/50" />
+                ))}
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                {saleData!.fruits.map((fruit, idx) => (
+                  <motion.div
+                    key={fruit.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: idx * 0.1 }}
+                  >
+                    <ProductCard fruit={fruit} />
+                  </motion.div>
+                ))}
+              </div>
+            )}
+
+            <div className="mt-8 flex justify-center md:hidden">
+              <Link href="/shop?onSale=true">
+                <Button variant="outline" className="rounded-xl">
+                  Все акции <ArrowRight className="ml-2 w-4 h-4" />
+                </Button>
+              </Link>
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* Promo Banner */}
       <section className="py-20 bg-background">

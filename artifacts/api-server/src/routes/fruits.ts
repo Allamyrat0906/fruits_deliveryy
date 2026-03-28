@@ -14,32 +14,24 @@ function withInStock(fruit: any) {
 router.get("/", async (req, res) => {
   try {
     const parsed = GetFruitsQueryParams.safeParse(req.query);
-    const params = parsed.success ? parsed.data : { page: 1, limit: 12 };
 
     const conditions: SQL[] = [];
+    let page = 1;
+    let limit = 12;
 
-    if (params.category) {
-      conditions.push(eq(fruitsTable.category, params.category as any));
-    }
-    if (params.organic !== undefined) {
-      conditions.push(eq(fruitsTable.organic, params.organic));
-    }
-    if (params.minPrice !== undefined) {
-      conditions.push(gte(fruitsTable.price, params.minPrice));
-    }
-    if (params.maxPrice !== undefined) {
-      conditions.push(lte(fruitsTable.price, params.maxPrice));
-    }
-    if (params.search) {
-      conditions.push(ilike(fruitsTable.name, `%${params.search}%`));
-    }
-    if ((params as any).onSale === true || (req.query as any).onSale === "true") {
-      conditions.push(isNotNull(fruitsTable.discountPrice));
+    if (parsed.success) {
+      const p = parsed.data;
+      page = p.page ?? 1;
+      limit = p.limit ?? 12;
+      if (p.category) conditions.push(eq(fruitsTable.category, p.category));
+      if (p.organic !== undefined) conditions.push(eq(fruitsTable.organic, p.organic));
+      if (p.minPrice !== undefined) conditions.push(gte(fruitsTable.price, p.minPrice));
+      if (p.maxPrice !== undefined) conditions.push(lte(fruitsTable.price, p.maxPrice));
+      if (p.search) conditions.push(ilike(fruitsTable.name, `%${p.search}%`));
+      if (p.onSale === true) conditions.push(isNotNull(fruitsTable.discountPrice));
     }
 
     const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
-    const page = params.page ?? 1;
-    const limit = params.limit ?? 12;
     const offset = (page - 1) * limit;
 
     const allFruits = await db.select().from(fruitsTable).where(whereClause);

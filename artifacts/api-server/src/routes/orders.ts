@@ -94,7 +94,7 @@ router.post("/", requireAuth, async (req: AuthRequest, res) => {
       return;
     }
 
-    const { address, phone, paidAmount, items } = parsed.data as any;
+    const { address, phone, paidAmount, items } = parsed.data;
 
     let totalPrice = 0;
     const enrichedItems: { fruitId: number; quantity: number; weight: string; unitPrice: number }[] = [];

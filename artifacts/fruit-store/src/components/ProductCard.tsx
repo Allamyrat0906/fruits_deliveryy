@@ -1,6 +1,6 @@
 import { Link } from "wouter";
 import { Fruit } from "@workspace/api-client-react";
-import { Leaf, Plus, ShoppingCart } from "lucide-react";
+import { Leaf, Plus, ShoppingCart, Tag } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useCart } from "@/hooks/use-cart";
@@ -11,7 +11,6 @@ export function ProductCard({ fruit }: { fruit: Fruit }) {
   const { addToCart } = useCart();
   const [isAdding, setIsAdding] = useState(false);
 
-  // Default to 1kg representation
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat("ru-RU", {
       style: "currency",
@@ -20,8 +19,11 @@ export function ProductCard({ fruit }: { fruit: Fruit }) {
     }).format(price);
   };
 
+  const effectivePrice = fruit.discountPrice ?? fruit.price;
+  const isOnSale = !!fruit.discountPrice;
+
   const handleAdd = (e: React.MouseEvent) => {
-    e.preventDefault(); // Prevent Link navigation
+    e.preventDefault();
     setIsAdding(true);
     addToCart({
       fruitId: fruit.id,
@@ -31,7 +33,7 @@ export function ProductCard({ fruit }: { fruit: Fruit }) {
       quantity: 1,
       weight: "1кг",
       weightMultiplier: 1,
-      unitPrice: fruit.price,
+      unitPrice: effectivePrice,
     });
     setTimeout(() => setIsAdding(false), 1000);
   };
@@ -48,6 +50,12 @@ export function ProductCard({ fruit }: { fruit: Fruit }) {
             <Badge className="bg-primary/90 hover:bg-primary text-white border-none px-3 py-1 flex items-center gap-1 shadow-md">
               <Leaf className="w-3 h-3" />
               Органика
+            </Badge>
+          )}
+          {isOnSale && (
+            <Badge className="bg-red-500 hover:bg-red-600 text-white border-none px-3 py-1 flex items-center gap-1 shadow-md">
+              <Tag className="w-3 h-3" />
+              Акция
             </Badge>
           )}
           {fruit.stock <= 5 && fruit.stock > 0 && (
@@ -75,6 +83,11 @@ export function ProductCard({ fruit }: { fruit: Fruit }) {
               <Leaf className="w-12 h-12 opacity-50" />
             </div>
           )}
+          {fruit.stock === 0 && (
+            <div className="absolute inset-0 bg-background/60 flex items-center justify-center">
+              <span className="text-muted-foreground font-semibold text-sm">Нет в наличии</span>
+            </div>
+          )}
         </div>
 
         {/* Content */}
@@ -91,10 +104,26 @@ export function ProductCard({ fruit }: { fruit: Fruit }) {
           
           <div className="flex items-center justify-between mt-auto pt-4 border-t border-border/50">
             <div>
-              <span className="font-bold text-xl text-foreground">
-                {formatPrice(fruit.price)}
-              </span>
-              <span className="text-muted-foreground text-sm"> / кг</span>
+              {isOnSale ? (
+                <div className="flex flex-col">
+                  <span className="text-muted-foreground line-through text-sm">
+                    {formatPrice(fruit.price)}
+                  </span>
+                  <div className="flex items-baseline gap-1">
+                    <span className="font-bold text-xl text-red-500">
+                      {formatPrice(effectivePrice)}
+                    </span>
+                    <span className="text-muted-foreground text-sm">/ кг</span>
+                  </div>
+                </div>
+              ) : (
+                <div>
+                  <span className="font-bold text-xl text-foreground">
+                    {formatPrice(fruit.price)}
+                  </span>
+                  <span className="text-muted-foreground text-sm"> / кг</span>
+                </div>
+              )}
             </div>
             
             <Button 
