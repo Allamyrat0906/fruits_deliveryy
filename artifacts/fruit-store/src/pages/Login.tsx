@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { Leaf } from "lucide-react";
+import { Leaf, Shield, User } from "lucide-react";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -29,63 +29,110 @@ export default function Login() {
     try {
       const res = await loginMutation.mutateAsync({ data: { email, password } });
       login(res.token, res.user);
-      toast({ title: "Успешный вход", description: "С возвращением!" });
+      toast({ title: "Успешный вход", description: `С возвращением, ${res.user.name}!` });
     } catch (err: any) {
-      toast({ 
-        variant: "destructive", 
-        title: "Ошибка", 
-        description: err.message || "Неверный email или пароль" 
+      toast({
+        variant: "destructive",
+        title: "Ошибка входа",
+        description: err.message || "Неверный email или пароль",
       });
     }
   };
 
+  const fillAdmin = () => {
+    setEmail("admin@fruitstore.ru");
+    setPassword("admin123");
+  };
+
+  const fillCustomer = () => {
+    setEmail("ivan@example.ru");
+    setPassword("customer123");
+  };
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-4">
-      <div className="w-full max-w-md bg-card p-8 rounded-3xl border border-border/50 shadow-xl">
-        <div className="flex justify-center mb-6">
-          <div className="bg-primary/10 text-primary p-3 rounded-2xl">
-            <Leaf className="w-8 h-8" />
+    <div className="min-h-screen flex items-center justify-center bg-background p-4 pt-24">
+      <div className="w-full max-w-md space-y-4">
+        {/* Test accounts hint */}
+        <div className="bg-muted/60 border border-border rounded-2xl p-4 space-y-3">
+          <p className="text-sm font-semibold text-foreground">Тестовые аккаунты</p>
+          <div className="grid grid-cols-2 gap-3">
+            <button
+              type="button"
+              onClick={fillAdmin}
+              className="flex items-center gap-2 bg-primary/10 hover:bg-primary/20 text-primary border border-primary/20 rounded-xl px-3 py-2.5 text-xs font-medium transition-colors text-left"
+            >
+              <Shield className="w-4 h-4 shrink-0" />
+              <div>
+                <p className="font-bold">Администратор</p>
+                <p className="text-[10px] text-primary/70">admin@fruitstore.ru</p>
+              </div>
+            </button>
+            <button
+              type="button"
+              onClick={fillCustomer}
+              className="flex items-center gap-2 bg-secondary/30 hover:bg-secondary/50 text-foreground border border-border rounded-xl px-3 py-2.5 text-xs font-medium transition-colors text-left"
+            >
+              <User className="w-4 h-4 shrink-0" />
+              <div>
+                <p className="font-bold">Покупатель</p>
+                <p className="text-[10px] text-muted-foreground">ivan@example.ru</p>
+              </div>
+            </button>
           </div>
         </div>
-        <h1 className="text-2xl font-display font-bold text-center text-foreground mb-2">С возвращением</h1>
-        <p className="text-center text-muted-foreground mb-8">Войдите в свой аккаунт для покупок</p>
 
-        <form onSubmit={handleSubmit} className="space-y-5">
-          <div>
-            <Label htmlFor="email">Email</Label>
-            <Input 
-              id="email" 
-              type="email" 
-              required 
-              value={email}
-              onChange={e => setEmail(e.target.value)}
-              className="mt-1 h-12 rounded-xl"
-              placeholder="name@example.com"
-            />
+        {/* Login Form */}
+        <div className="bg-card p-8 rounded-3xl border border-border/50 shadow-xl">
+          <div className="flex justify-center mb-6">
+            <div className="bg-primary/10 text-primary p-3 rounded-2xl">
+              <Leaf className="w-8 h-8" />
+            </div>
           </div>
-          <div>
-            <Label htmlFor="password">Пароль</Label>
-            <Input 
-              id="password" 
-              type="password" 
-              required 
-              value={password}
-              onChange={e => setPassword(e.target.value)}
-              className="mt-1 h-12 rounded-xl"
-              placeholder="••••••••"
-            />
-          </div>
-          <Button 
-            type="submit" 
-            className="w-full h-12 rounded-xl text-md"
-            disabled={loginMutation.isPending}
-          >
-            {loginMutation.isPending ? "Вход..." : "Войти"}
-          </Button>
-        </form>
+          <h1 className="text-2xl font-bold text-center text-foreground mb-2">С возвращением</h1>
+          <p className="text-center text-muted-foreground mb-8">Войдите в свой аккаунт для покупок</p>
 
-        <div className="mt-6 text-center text-sm text-muted-foreground">
-          Нет аккаунта? <Link href="/register" className="text-primary font-semibold hover:underline">Зарегистрируйтесь</Link>
+          <form onSubmit={handleSubmit} className="space-y-5">
+            <div>
+              <Label htmlFor="email">Email</Label>
+              <Input
+                id="email"
+                type="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="mt-1 h-12 rounded-xl"
+                placeholder="name@example.com"
+                autoComplete="email"
+              />
+            </div>
+            <div>
+              <Label htmlFor="password">Пароль</Label>
+              <Input
+                id="password"
+                type="password"
+                required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="mt-1 h-12 rounded-xl"
+                placeholder="••••••••"
+                autoComplete="current-password"
+              />
+            </div>
+            <Button
+              type="submit"
+              className="w-full h-12 rounded-xl text-md"
+              disabled={loginMutation.isPending}
+            >
+              {loginMutation.isPending ? "Вход..." : "Войти"}
+            </Button>
+          </form>
+
+          <div className="mt-6 text-center text-sm text-muted-foreground">
+            Нет аккаунта?{" "}
+            <Link href="/register" className="text-primary font-semibold hover:underline">
+              Зарегистрируйтесь
+            </Link>
+          </div>
         </div>
       </div>
     </div>
