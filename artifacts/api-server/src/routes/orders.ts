@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { db } from "@workspace/db";
 import { ordersTable, orderItemsTable, fruitsTable, usersTable } from "@workspace/db/schema";
-import { eq, ilike, or, desc } from "drizzle-orm";
+import { eq, ilike, or, desc, count } from "drizzle-orm";
 import { requireAuth, requireAdmin, AuthRequest } from "../middlewares/auth.js";
 import { CreateOrderBody, UpdateOrderStatusBody } from "@workspace/api-zod";
 
@@ -25,12 +25,12 @@ async function buildOrderResponse(order: any) {
 
 router.get("/", requireAdmin, async (req: AuthRequest, res) => {
   try {
-    const page = parseInt(String(req.query.page ?? "1"));
-    const limit = parseInt(String(req.query.limit ?? "20"));
-    const search = req.query.search as string | undefined;
+    const page = parseInt(String(req.query.page ?? "1"), 10);
+    const limit = parseInt(String(req.query.limit ?? "20"), 10);
+    const search = typeof req.query.search === "string" ? req.query.search : undefined;
     const offset = (page - 1) * limit;
 
-    const allOrdersWithUsers = await db
+    const baseQuery = db
       .select({
         id: ordersTable.id,
         userId: ordersTable.userId,
@@ -44,19 +44,27 @@ router.get("/", requireAdmin, async (req: AuthRequest, res) => {
         customerEmail: usersTable.email,
       })
       .from(ordersTable)
-      .innerJoin(usersTable, eq(ordersTable.userId, usersTable.id))
-      .orderBy(desc(ordersTable.createdAt));
+      .innerJoin(usersTable, eq(ordersTable.userId, usersTable.id));
 
-    const filtered = search
-      ? allOrdersWithUsers.filter(o =>
-          o.customerName.toLowerCase().includes(search.toLowerCase()) ||
-          o.customerEmail.toLowerCase().includes(search.toLowerCase()) ||
-          o.phone.toLowerCase().includes(search.toLowerCase())
+    const whereCondition = search
+      ? or(
+          ilike(usersTable.name, `%${search}%`),
+          ilike(usersTable.email, `%${search}%`),
+          ilike(ordersTable.phone, `%${search}%`),
         )
-      : allOrdersWithUsers;
+      : undefined;
 
-    const total = filtered.length;
-    const pageOrders = filtered.slice(offset, offset + limit);
+    const [{ value: total }] = await db
+      .select({ value: count() })
+      .from(ordersTable)
+      .innerJoin(usersTable, eq(ordersTable.userId, usersTable.id))
+      .where(whereCondition);
+
+    const pageOrders = await baseQuery
+      .where(whereCondition)
+      .orderBy(desc(ordersTable.createdAt))
+      .limit(limit)
+      .offset(offset);
 
     const fullOrders = await Promise.all(
       pageOrders.map(async (order) => {
