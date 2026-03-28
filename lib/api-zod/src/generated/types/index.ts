@@ -6,6 +6,9 @@
  * OpenAPI spec version: 0.1.0
  */
 
+export * from "./adminOrder";
+export * from "./adminOrdersListResponse";
+export * from "./adminOrderStatus";
 export * from "./authResponse";
 export * from "./createFruitInput";
 export * from "./createFruitInputCategory";
@@ -16,6 +19,7 @@ export * from "./errorResponseErrorsItem";
 export * from "./fruit";
 export * from "./fruitCategory";
 export * from "./fruitsListResponse";
+export * from "./getAllOrdersParams";
 export * from "./getFruitsCategory";
 export * from "./getFruitsParams";
 export * from "./healthStatus";

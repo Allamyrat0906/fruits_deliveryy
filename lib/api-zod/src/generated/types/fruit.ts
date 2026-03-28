@@ -13,9 +13,12 @@ export interface Fruit {
   slug: string;
   description?: string | null;
   price: number;
+  discountPrice?: number | null;
   stock: number;
+  inStock: boolean;
   category: FruitCategory;
   organic: boolean;
   imageUrl?: string | null;
+  images: string[];
   createdAt: Date;
 }

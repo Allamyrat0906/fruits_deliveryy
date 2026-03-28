@@ -13,6 +13,7 @@ export type GetFruitsParams = {
   maxPrice?: number;
   search?: string;
   organic?: boolean;
+  onSale?: boolean;
   page?: number;
   limit?: number;
 };

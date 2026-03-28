@@ -72,10 +72,13 @@ export interface Fruit {
   slug: string;
   description?: string | null;
   price: number;
+  discountPrice?: number | null;
   stock: number;
+  inStock: boolean;
   category: FruitCategory;
   organic: boolean;
   imageUrl?: string | null;
+  images: string[];
   createdAt: string;
 }
 
@@ -101,10 +104,12 @@ export interface CreateFruitInput {
   slug: string;
   description?: string;
   price: number;
+  discountPrice?: number | null;
   stock: number;
   category: CreateFruitInputCategory;
   organic?: boolean;
   imageUrl?: string;
+  images?: string[];
 }
 
 export interface OrderItem {
@@ -132,8 +137,43 @@ export interface Order {
   status: OrderStatus;
   totalPrice: number;
   address: string;
+  phone: string;
+  paidAmount?: number | null;
   items: OrderItem[];
   createdAt: string;
+}
+
+export type AdminOrderStatus =
+  (typeof AdminOrderStatus)[keyof typeof AdminOrderStatus];
+
+export const AdminOrderStatus = {
+  ОЖИДАНИЕ: "ОЖИДАНИЕ",
+  ПОДТВЕРЖДЁН: "ПОДТВЕРЖДЁН",
+  ОТПРАВЛЕН: "ОТПРАВЛЕН",
+  ДОСТАВЛЕН: "ДОСТАВЛЕН",
+  ОТМЕНЁН: "ОТМЕНЁН",
+} as const;
+
+export interface AdminOrder {
+  id: number;
+  userId: number;
+  customerName: string;
+  customerEmail: string;
+  status: AdminOrderStatus;
+  totalPrice: number;
+  address: string;
+  phone: string;
+  paidAmount?: number | null;
+  changeDue?: number | null;
+  items: OrderItem[];
+  createdAt: string;
+}
+
+export interface AdminOrdersListResponse {
+  orders: AdminOrder[];
+  total: number;
+  page: number;
+  totalPages: number;
 }
 
 export type CreateOrderInputItemsItem = {
@@ -144,6 +184,8 @@ export type CreateOrderInputItemsItem = {
 
 export interface CreateOrderInput {
   address: string;
+  phone: string;
+  paidAmount?: number | null;
   items: CreateOrderInputItemsItem[];
 }
 
@@ -168,6 +210,7 @@ export type GetFruitsParams = {
   maxPrice?: number;
   search?: string;
   organic?: boolean;
+  onSale?: boolean;
   page?: number;
   limit?: number;
 };
@@ -181,3 +224,9 @@ export const GetFruitsCategory = {
   ОРГАНИЧЕСКИЕ: "ОРГАНИЧЕСКИЕ",
   ИМПОРТНЫЕ: "ИМПОРТНЫЕ",
 } as const;
+
+export type GetAllOrdersParams = {
+  page?: number;
+  limit?: number;
+  search?: string;
+};

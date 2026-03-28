@@ -80,6 +80,7 @@ export const GetFruitsQueryParams = zod.object({
   maxPrice: zod.coerce.number().optional(),
   search: zod.coerce.string().optional(),
   organic: zod.coerce.boolean().optional(),
+  onSale: zod.coerce.boolean().optional(),
   page: zod.coerce.number().default(getFruitsQueryPageDefault),
   limit: zod.coerce.number().default(getFruitsQueryLimitDefault),
 });
@@ -92,7 +93,9 @@ export const GetFruitsResponse = zod.object({
       slug: zod.string(),
       description: zod.string().nullish(),
       price: zod.number(),
+      discountPrice: zod.number().nullish(),
       stock: zod.number(),
+      inStock: zod.boolean(),
       category: zod.enum([
         "МЕСТНЫЕ",
         "ТРОПИЧЕСКИЕ",
@@ -101,6 +104,7 @@ export const GetFruitsResponse = zod.object({
       ]),
       organic: zod.boolean(),
       imageUrl: zod.string().nullish(),
+      images: zod.array(zod.string()),
       createdAt: zod.coerce.date(),
     }),
   ),
@@ -117,10 +121,12 @@ export const CreateFruitBody = zod.object({
   slug: zod.string(),
   description: zod.string().optional(),
   price: zod.number(),
+  discountPrice: zod.number().nullish(),
   stock: zod.number(),
   category: zod.enum(["МЕСТНЫЕ", "ТРОПИЧЕСКИЕ", "ОРГАНИЧЕСКИЕ", "ИМПОРТНЫЕ"]),
   organic: zod.boolean().optional(),
   imageUrl: zod.string().optional(),
+  images: zod.array(zod.string()).optional(),
 });
 
 /**
@@ -136,10 +142,13 @@ export const GetFruitBySlugResponse = zod.object({
   slug: zod.string(),
   description: zod.string().nullish(),
   price: zod.number(),
+  discountPrice: zod.number().nullish(),
   stock: zod.number(),
+  inStock: zod.boolean(),
   category: zod.enum(["МЕСТНЫЕ", "ТРОПИЧЕСКИЕ", "ОРГАНИЧЕСКИЕ", "ИМПОРТНЫЕ"]),
   organic: zod.boolean(),
   imageUrl: zod.string().nullish(),
+  images: zod.array(zod.string()),
   createdAt: zod.coerce.date(),
 });
 
@@ -155,10 +164,12 @@ export const UpdateFruitBody = zod.object({
   slug: zod.string(),
   description: zod.string().optional(),
   price: zod.number(),
+  discountPrice: zod.number().nullish(),
   stock: zod.number(),
   category: zod.enum(["МЕСТНЫЕ", "ТРОПИЧЕСКИЕ", "ОРГАНИЧЕСКИЕ", "ИМПОРТНЫЕ"]),
   organic: zod.boolean().optional(),
   imageUrl: zod.string().optional(),
+  images: zod.array(zod.string()).optional(),
 });
 
 export const UpdateFruitResponse = zod.object({
@@ -167,10 +178,13 @@ export const UpdateFruitResponse = zod.object({
   slug: zod.string(),
   description: zod.string().nullish(),
   price: zod.number(),
+  discountPrice: zod.number().nullish(),
   stock: zod.number(),
+  inStock: zod.boolean(),
   category: zod.enum(["МЕСТНЫЕ", "ТРОПИЧЕСКИЕ", "ОРГАНИЧЕСКИЕ", "ИМПОРТНЫЕ"]),
   organic: zod.boolean(),
   imageUrl: zod.string().nullish(),
+  images: zod.array(zod.string()),
   createdAt: zod.coerce.date(),
 });
 
@@ -186,10 +200,61 @@ export const DeleteFruitResponse = zod.object({
 });
 
 /**
+ * @summary Get all orders (Admin only)
+ */
+export const getAllOrdersQueryPageDefault = 1;
+export const getAllOrdersQueryLimitDefault = 20;
+
+export const GetAllOrdersQueryParams = zod.object({
+  page: zod.coerce.number().default(getAllOrdersQueryPageDefault),
+  limit: zod.coerce.number().default(getAllOrdersQueryLimitDefault),
+  search: zod.coerce.string().optional(),
+});
+
+export const GetAllOrdersResponse = zod.object({
+  orders: zod.array(
+    zod.object({
+      id: zod.number(),
+      userId: zod.number(),
+      customerName: zod.string(),
+      customerEmail: zod.string(),
+      status: zod.enum([
+        "ОЖИДАНИЕ",
+        "ПОДТВЕРЖДЁН",
+        "ОТПРАВЛЕН",
+        "ДОСТАВЛЕН",
+        "ОТМЕНЁН",
+      ]),
+      totalPrice: zod.number(),
+      address: zod.string(),
+      phone: zod.string(),
+      paidAmount: zod.number().nullish(),
+      changeDue: zod.number().nullish(),
+      items: zod.array(
+        zod.object({
+          id: zod.number(),
+          fruitId: zod.number(),
+          fruitName: zod.string(),
+          quantity: zod.number(),
+          weight: zod.string(),
+          unitPrice: zod.number(),
+        }),
+      ),
+      createdAt: zod.coerce.date(),
+    }),
+  ),
+  total: zod.number(),
+  page: zod.number(),
+  totalPages: zod.number(),
+});
+
+/**
  * @summary Create a new order
  */
 export const CreateOrderBody = zod.object({
   address: zod.string(),
+  phone: zod.string(),
+  paidAmount: zod.number().nullish(),
   items: zod.array(
     zod.object({
       fruitId: zod.number(),
@@ -214,6 +279,8 @@ export const GetMyOrdersResponseItem = zod.object({
   ]),
   totalPrice: zod.number(),
   address: zod.string(),
+  phone: zod.string(),
+  paidAmount: zod.number().nullish(),
   items: zod.array(
     zod.object({
       id: zod.number(),
@@ -247,6 +314,8 @@ export const GetOrderByIdResponse = zod.object({
   ]),
   totalPrice: zod.number(),
   address: zod.string(),
+  phone: zod.string(),
+  paidAmount: zod.number().nullish(),
   items: zod.array(
     zod.object({
       id: zod.number(),
@@ -289,6 +358,8 @@ export const UpdateOrderStatusResponse = zod.object({
   ]),
   totalPrice: zod.number(),
   address: zod.string(),
+  phone: zod.string(),
+  paidAmount: zod.number().nullish(),
   items: zod.array(
     zod.object({
       id: zod.number(),

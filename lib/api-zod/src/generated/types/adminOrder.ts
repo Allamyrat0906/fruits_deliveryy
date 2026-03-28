@@ -5,17 +5,20 @@
  * Fruit Store API for Russian customers
  * OpenAPI spec version: 0.1.0
  */
+import type { AdminOrderStatus } from "./adminOrderStatus";
 import type { OrderItem } from "./orderItem";
-import type { OrderStatus } from "./orderStatus";
 
-export interface Order {
+export interface AdminOrder {
   id: number;
   userId: number;
-  status: OrderStatus;
+  customerName: string;
+  customerEmail: string;
+  status: AdminOrderStatus;
   totalPrice: number;
   address: string;
   phone: string;
   paidAmount?: number | null;
+  changeDue?: number | null;
   items: OrderItem[];
   createdAt: Date;
 }

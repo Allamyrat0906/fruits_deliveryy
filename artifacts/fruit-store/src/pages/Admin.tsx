@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
-import { useAuth, authHeaders } from "@/hooks/use-auth";
+import { useAuth } from "@/hooks/use-auth";
+import { authHeaders } from "@/lib/auth-helpers";
 import { useGetFruits, useCreateFruit, useUpdateFruit, useDeleteFruit, useUpdateOrderStatus, Fruit, Order } from "@workspace/api-client-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";

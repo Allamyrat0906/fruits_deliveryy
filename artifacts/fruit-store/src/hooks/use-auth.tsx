@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { User, useGetCurrentUser, getGetCurrentUserQueryKey, setAuthTokenGetter } from "@workspace/api-client-react";
+import { authHeaders } from "@/lib/auth-helpers";
 
 interface AuthContextType {
   user: User | null;
@@ -12,11 +13,6 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Helper to get auth headers manually (for hooks that need request config)
-export const authHeaders = () => {
-  const token = localStorage.getItem("fruit_token");
-  return token ? { Authorization: `Bearer ${token}` } : {};
-};
 
 // Set up global auth token getter so ALL API calls get the token automatically
 setAuthTokenGetter(() => localStorage.getItem("fruit_token"));

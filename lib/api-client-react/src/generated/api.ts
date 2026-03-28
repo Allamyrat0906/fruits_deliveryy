@@ -17,12 +17,14 @@ import type {
 } from "@tanstack/react-query";
 
 import type {
+  AdminOrdersListResponse,
   AuthResponse,
   CreateFruitInput,
   CreateOrderInput,
   ErrorResponse,
   Fruit,
   FruitsListResponse,
+  GetAllOrdersParams,
   GetFruitsParams,
   HealthStatus,
   LoginInput,
@@ -880,6 +882,100 @@ export const useDeleteFruit = <
 > => {
   return useMutation(getDeleteFruitMutationOptions(options));
 };
+
+/**
+ * @summary Get all orders (Admin only)
+ */
+export const getGetAllOrdersUrl = (params?: GetAllOrdersParams) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : value.toString());
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/orders?${stringifiedParams}`
+    : `/api/orders`;
+};
+
+export const getAllOrders = async (
+  params?: GetAllOrdersParams,
+  options?: RequestInit,
+): Promise<AdminOrdersListResponse> => {
+  return customFetch<AdminOrdersListResponse>(getGetAllOrdersUrl(params), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetAllOrdersQueryKey = (params?: GetAllOrdersParams) => {
+  return [`/api/orders`, ...(params ? [params] : [])] as const;
+};
+
+export const getGetAllOrdersQueryOptions = <
+  TData = Awaited<ReturnType<typeof getAllOrders>>,
+  TError = ErrorType<ErrorResponse>,
+>(
+  params?: GetAllOrdersParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getAllOrders>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetAllOrdersQueryKey(params);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getAllOrders>>> = ({
+    signal,
+  }) => getAllOrders(params, { signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getAllOrders>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetAllOrdersQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getAllOrders>>
+>;
+export type GetAllOrdersQueryError = ErrorType<ErrorResponse>;
+
+/**
+ * @summary Get all orders (Admin only)
+ */
+
+export function useGetAllOrders<
+  TData = Awaited<ReturnType<typeof getAllOrders>>,
+  TError = ErrorType<ErrorResponse>,
+>(
+  params?: GetAllOrdersParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getAllOrders>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetAllOrdersQueryOptions(params, options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
 
 /**
  * @summary Create a new order

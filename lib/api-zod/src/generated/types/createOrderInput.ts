@@ -9,5 +9,7 @@ import type { CreateOrderInputItemsItem } from "./createOrderInputItemsItem";
 
 export interface CreateOrderInput {
   address: string;
+  phone: string;
+  paidAmount?: number | null;
   items: CreateOrderInputItemsItem[];
 }

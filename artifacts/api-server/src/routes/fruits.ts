@@ -1,11 +1,15 @@
 import { Router } from "express";
 import { db } from "@workspace/db";
 import { fruitsTable } from "@workspace/db/schema";
-import { eq, ilike, gte, lte, and, SQL } from "drizzle-orm";
+import { eq, ilike, gte, lte, and, isNotNull, SQL } from "drizzle-orm";
 import { requireAdmin, AuthRequest } from "../middlewares/auth.js";
-import { GetFruitsQueryParams, CreateFruitBody, GetFruitBySlugParams, UpdateFruitParams } from "@workspace/api-zod";
+import { GetFruitsQueryParams, CreateFruitBody } from "@workspace/api-zod";
 
 const router = Router();
+
+function withInStock(fruit: any) {
+  return { ...fruit, inStock: (fruit.stock ?? 0) > 0 };
+}
 
 router.get("/", async (req, res) => {
   try {
@@ -29,6 +33,9 @@ router.get("/", async (req, res) => {
     if (params.search) {
       conditions.push(ilike(fruitsTable.name, `%${params.search}%`));
     }
+    if ((params as any).onSale === true || (req.query as any).onSale === "true") {
+      conditions.push(isNotNull(fruitsTable.discountPrice));
+    }
 
     const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
     const page = params.page ?? 1;
@@ -37,7 +44,7 @@ router.get("/", async (req, res) => {
 
     const allFruits = await db.select().from(fruitsTable).where(whereClause);
     const total = allFruits.length;
-    const fruits = allFruits.slice(offset, offset + limit);
+    const fruits = allFruits.slice(offset, offset + limit).map(withInStock);
 
     res.json({
       fruits,
@@ -61,7 +68,7 @@ router.get("/:slug", async (req, res) => {
       return;
     }
 
-    res.json(fruit);
+    res.json(withInStock(fruit));
   } catch (err) {
     req.log.error({ err }, "Get fruit by slug error");
     res.status(500).json({ message: "Внутренняя ошибка сервера" });
@@ -77,7 +84,7 @@ router.post("/", requireAdmin, async (req: AuthRequest, res) => {
     }
 
     const [fruit] = await db.insert(fruitsTable).values(parsed.data as any).returning();
-    res.status(201).json(fruit);
+    res.status(201).json(withInStock(fruit));
   } catch (err) {
     req.log.error({ err }, "Create fruit error");
     res.status(500).json({ message: "Внутренняя ошибка сервера" });
@@ -98,7 +105,7 @@ router.put("/:id", requireAdmin, async (req: AuthRequest, res) => {
       res.status(404).json({ message: "Продукт не найден" });
       return;
     }
-    res.json(fruit);
+    res.json(withInStock(fruit));
   } catch (err) {
     req.log.error({ err }, "Update fruit error");
     res.status(500).json({ message: "Внутренняя ошибка сервера" });

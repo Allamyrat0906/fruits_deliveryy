@@ -1,7 +1,8 @@
 import { useEffect } from "react";
 import { useLocation } from "wouter";
 import { useGetMyOrders } from "@workspace/api-client-react";
-import { useAuth, authHeaders } from "@/hooks/use-auth";
+import { useAuth } from "@/hooks/use-auth";
+import { authHeaders } from "@/lib/auth-helpers";
 import { format } from "date-fns";
 import { ru } from "date-fns/locale";
 import { Badge } from "@/components/ui/badge";

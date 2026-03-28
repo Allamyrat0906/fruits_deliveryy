@@ -10,10 +10,12 @@ export const fruitsTable = pgTable("fruits", {
   slug: text("slug").notNull().unique(),
   description: text("description"),
   price: doublePrecision("price").notNull(),
+  discountPrice: doublePrecision("discount_price"),
   stock: integer("stock").notNull().default(0),
   category: categoryEnum("category").notNull(),
   organic: boolean("organic").notNull().default(false),
   imageUrl: text("image_url"),
+  images: text("images").array().notNull().default([]),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 

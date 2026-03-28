@@ -12,8 +12,10 @@ export interface CreateFruitInput {
   slug: string;
   description?: string;
   price: number;
+  discountPrice?: number | null;
   stock: number;
   category: CreateFruitInputCategory;
   organic?: boolean;
   imageUrl?: string;
+  images?: string[];
 }

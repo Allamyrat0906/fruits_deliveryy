@@ -150,6 +150,10 @@ paths:
           in: query
           schema:
             type: boolean
+        - name: onSale
+          in: query
+          schema:
+            type: boolean
         - name: page
           in: query
           schema:
@@ -261,6 +265,47 @@ paths:
                 $ref: "#/components/schemas/MessageResponse"
 
   /orders:
+    get:
+      operationId: getAllOrders
+      tags: [orders]
+      summary: Get all orders (Admin only)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+        - name: search
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of all orders with customer info
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminOrdersListResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
     post:
       operationId: createOrder
       tags: [orders]
@@ -478,8 +523,13 @@ components:
           nullable: true
         price:
           type: number
+        discountPrice:
+          type: number
+          nullable: true
         stock:
           type: integer
+        inStock:
+          type: boolean
         category:
           type: string
           enum: [МЕСТНЫЕ, ТРОПИЧЕСКИЕ, ОРГАНИЧЕСКИЕ, ИМПОРТНЫЕ]
@@ -488,6 +538,10 @@ components:
         imageUrl:
           type: string
           nullable: true
+        images:
+          type: array
+          items:
+            type: string
         createdAt:
           type: string
           format: date-time
@@ -497,8 +551,10 @@ components:
         - slug
         - price
         - stock
+        - inStock
         - category
         - organic
+        - images
         - createdAt
 
     FruitsListResponse:
@@ -531,6 +587,9 @@ components:
           type: string
         price:
           type: number
+        discountPrice:
+          type: number
+          nullable: true
         stock:
           type: integer
         category:
@@ -540,6 +599,10 @@ components:
           type: boolean
         imageUrl:
           type: string
+        images:
+          type: array
+          items:
+            type: string
       required:
         - name
         - slug
@@ -584,6 +647,11 @@ components:
           type: number
         address:
           type: string
+        phone:
+          type: string
+        paidAmount:
+          type: number
+          nullable: true
         items:
           type: array
           items:
@@ -597,14 +665,84 @@ components:
         - status
         - totalPrice
         - address
+        - phone
         - items
         - createdAt
+
+    AdminOrder:
+      type: object
+      properties:
+        id:
+          type: integer
+        userId:
+          type: integer
+        customerName:
+          type: string
+        customerEmail:
+          type: string
+        status:
+          type: string
+          enum: [ОЖИДАНИЕ, ПОДТВЕРЖДЁН, ОТПРАВЛЕН, ДОСТАВЛЕН, ОТМЕНЁН]
+        totalPrice:
+          type: number
+        address:
+          type: string
+        phone:
+          type: string
+        paidAmount:
+          type: number
+          nullable: true
+        changeDue:
+          type: number
+          nullable: true
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/OrderItem"
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - userId
+        - customerName
+        - customerEmail
+        - status
+        - totalPrice
+        - address
+        - phone
+        - items
+        - createdAt
+
+    AdminOrdersListResponse:
+      type: object
+      properties:
+        orders:
+          type: array
+          items:
+            $ref: "#/components/schemas/AdminOrder"
+        total:
+          type: integer
+        page:
+          type: integer
+        totalPages:
+          type: integer
+      required:
+        - orders
+        - total
+        - page
+        - totalPages
 
     CreateOrderInput:
       type: object
       properties:
         address:
           type: string
+        phone:
+          type: string
+        paidAmount:
+          type: number
+          nullable: true
         items:
           type: array
           items:
@@ -622,6 +760,7 @@ components:
               - weight
       required:
         - address
+        - phone
         - items
 
     UpdateOrderStatusInput:

@@ -12,6 +12,8 @@ export const ordersTable = pgTable("orders", {
   status: orderStatusEnum("status").notNull().default("ОЖИДАНИЕ"),
   totalPrice: doublePrecision("total_price").notNull(),
   address: text("address").notNull(),
+  phone: text("phone").notNull().default(""),
+  paidAmount: doublePrecision("paid_amount"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
